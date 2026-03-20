@@ -8,10 +8,10 @@ This repository contains the analytical code used for the cost-effectiveness ana
 
 ## 📦 Repository Structure
 
-code/
-├── Basecase/              # Base-case analysis
-├── Scenario Analysis/     # Scenario analyses
-├── Sensitivity Analysis/  # Deterministic and probabilistic sensitivity analyses
+code//
+├── Basecase//              # Base-case analysis
+├── Scenario Analysis//     # Scenario analyses
+├── Sensitivity Analysis//  # Deterministic and probabilistic sensitivity analyses
 
 ---
 
