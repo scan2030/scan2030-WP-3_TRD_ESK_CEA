@@ -1126,10 +1126,16 @@ psa_results <- heemod::run_psa(
   N = 10000
 )
 
-
+saveRDS(psa_results, file = "psa_results_10000.rds")
 
 # Monte Carlo
-p2 <- plot(psa_results, type = "ce")
+
+p2 <- getS3method("plot", "psa", envir = asNamespace("heemod"))(
+  psa_results,
+  type = "ce"
+)
+
+p2
 
 
 monte_data <- ggplot_build(p2)$data[[1]]
@@ -1148,16 +1154,16 @@ monte_data$strategy <- factor(monte_data$group,
 library(ggplot2)
 library(dplyr)
 
-
 cols <- c(
-  "AUG"  = "purple",
-  "COM"  = "#f3a361",
-  "cPSY" = "#e7c66b",
-  "ECT"  = "#8ab07c",
-  "ESK"  = "#299d8f",
-  "mPSY" = "green",
-  "TMS"  = "#274753"
+  "AUG"  = "#6A3D9A",
+  "COM"  = "#E69F00",
+  "cPSY" = "#A6761D",
+  "ECT"  = "#377EB8",
+  "ESK"  = "#1B9E77",
+  "mPSY" = "#66A61E",
+  "TMS"  = "#4D4D4D"
 )
+
 
 
 monte_data2 <- monte_data %>%
@@ -1184,46 +1190,47 @@ monte_AUG    <- monte_data2 %>% filter(strategy == "AUG")
 ell_nonAUG <- ellipse_ok %>% filter(strategy != "AUG")
 ell_AUG    <- ellipse_ok %>% filter(strategy == "AUG")
 
-
 p_monte_final <- ggplot() +
   geom_point(
     data = monte_nonAUG,
     aes(x = x, y = y, color = strategy),
-    alpha = 0.55, size = 0.5
+    alpha = 0.55, size = 0.3
   ) +
   stat_ellipse(
     data = ell_nonAUG,
     aes(x = x, y = y, color = strategy),
     type = "norm", level = 0.95,
-    size = 0.6, show.legend = FALSE
+    size = 0.5, show.legend = FALSE
   ) +
   geom_point(
     data = monte_AUG,
     aes(x = x, y = y, color = strategy),
-    alpha = 0.95, size = 0.9
+    alpha = 0.95, size = 0.5
   ) +
   stat_ellipse(
     data = ell_AUG,
     aes(x = x, y = y, color = strategy),
     type = "norm", level = 0.95,
-    size = 0.8, show.legend = FALSE
+    size = 0.5, show.legend = FALSE
   ) +
-  geom_abline(slope = 50000,  intercept = 0, linetype = "dashed",
-              color = "darkred", size = 1) +
+  geom_abline(slope = 50000, intercept = 0, linetype = "dashed",
+              color = "darkred", size = 0.8) +
   geom_abline(slope = 150000, intercept = 0, linetype = "dashed",
-              color = "darkred", size = 1) +
+              color = "darkred", size = 0.8) +
   annotate("text", x = 0.2, y = 0.18 * 50000,
-           label = "WTP = USD 50,000/QALY",
-           color = "darkred", hjust = 0, size = 4.5, fontface = "bold") +
+           label = "WTP = US$50,000 per QALY",
+           color = "darkred", hjust = 0, size = 4, fontface = "bold") +
   annotate("text", x = 0.2, y = 0.18 * 150000,
-           label = "3xWTP = USD 150,000/QALY",
-           color = "darkred", hjust = 0, size = 4.5, fontface = "bold") +
+           label = "3×WTP = US$150,000 per QALY",
+           color = "darkred", hjust = 0, size = 4, fontface = "bold") +
   scale_color_manual(values = cols) +
   labs(
-    title = "Probabilistic Sensitivity Analysis: Cost-Effectiveness Plane (10,000 Simulations)",
     x = "Incremental Effect (QALYs)",
     y = "Incremental Cost (US$)",
     color = "Treatment"
+  ) +
+  guides(
+    color = guide_legend(override.aes = list(size = 4))
   ) +
   theme_minimal(base_size = 14) +
   theme(
@@ -1231,99 +1238,127 @@ p_monte_final <- ggplot() +
     panel.grid.minor = element_blank(),
     panel.grid.major = element_line(color = "grey85"),
     axis.line = element_line(color = "black"),
-    legend.title = element_text(size = 12, face = "bold"),
-    legend.text = element_text(size = 10),
+    legend.title = element_text(size = 14, face = "bold"),
+    legend.text = element_text(size = 12),
     axis.text = element_text(size = 12),
     axis.title = element_text(size = 14),
-    legend.position = "right"
+    legend.position = "right",
+    legend.background = element_rect(fill = "white", color = "grey50", linewidth = 0.5),
+    legend.key = element_blank()
   )
+
 
 p_monte_final 
 
-
-library(heemod)
-pacman::p_load(data.table, dplyr)
-
-library(tidyr)
-library(dplyr)
-
-library(ggplot2)
-
+ggsave(
+  filename = "psa_ce.tif",
+  plot = p_monte_final,
+  width = 12,
+  height = 7.5,
+  dpi = 300,
+  compression = "lzw",
+  bg = "white"
+)
 
 
 # CEAC plot
 library(scales)
+library(heemod)
+pacman::p_load(data.table, dplyr)
+library(tidyr)
+library(dplyr)
+library(ggplot2)
 
-
-p <- plot(psa_results, type = "ac", max_wtp = 5000000, log_scale = FALSE)
-
-
+p <- getS3method("plot", "psa", envir = asNamespace("heemod"))(
+  psa_results,
+  type = "ac",
+  max_wtp = 4000000,
+  log_scale = FALSE
+)
 
 ceac_data <- ggplot_build(p)$data[[1]]
-
 ceac_data$x <- ceac_data$x / 7.8
 
-
-head(ceac_data)
-
-ceac_data$strategy <- factor(ceac_data$group,
-                             levels = 1:7,
-                             labels = c("AUG", "COM", "cPSY", "ECT", "ESK", "mPSY", "TMS")
+ceac_data$strategy <- factor(
+  ceac_data$group,
+  levels = 1:7,
+  labels = c("AUG", "COM", "cPSY", "ECT", "ESK", "mPSY", "TMS")
 )
 
 library(ggplot2)
 library(scales)
 
-
-ggplot(ceac_data, aes(x = x, y = y, color = strategy)) +
-  geom_line(size = 1) +
-  
-  geom_vline(xintercept = 50000, linetype = "dashed", color = "grey60", size = 0.7) +
-  geom_vline(xintercept = 150000, linetype = "dashed", color = "grey60", size = 0.7) +
-  geom_vline(xintercept = 213675, linetype = "dashed", color = "grey60", size = 0.6) +
-  
-  
-  annotate("text", x = 50000, y = 0.4, label = "WTP", angle = 90,
-           hjust = -0.2, vjust = 0, size = 3, color = "grey30") +
-  annotate("text", x = 150000, y = 0.4, label = "3xWTP", angle = 90,
-           hjust = -0.2, vjust = 0, size = 3, color = "grey30") +
-  annotate("text", x = 213675, y = 0.4,
-           label = "WTP: USD 213,675 per QALY",
-           hjust = 0, vjust = 1, size = 3, color = "grey30", angle = 90) +
-  
-  scale_x_continuous(labels = comma) +
-  labs(
-    title = "Probabilistic Sensitivity Analysis: Cost-Effectiveness Acceptability Curve (10,000 Monte Carlo Simulations)",
-    x = "Willingness-to-Pay Threshold (USD)",
-    y = "Probability of Cost-Effectiveness",
-    color = "Strategy"
-  ) +
-
-  theme_minimal(base_size = 14) +
-  theme(
-    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
-    axis.title = element_text(size = 14),
-    axis.text = element_text(size = 12),
-    legend.title = element_text(size = 12, face = "bold"),
-    legend.text = element_text(size = 10),
-    legend.position = "right",
-    panel.grid.minor = element_blank(),
-    panel.grid.major = element_line(color = "grey85"),
-    axis.line = element_line(color = "black")
-  )
-
-
-
-
-ggsave(
-  filename = "psa_ac.png",  
-  plot = last_plot(),             
-  width = 12, height = 7, dpi = 300 
+cols <- c(
+  "AUG"  = "#6A3D9A",
+  "COM"  = "#E69F00",
+  "cPSY" = "#A6761D",
+  "ECT"  = "#377EB8",
+  "ESK"  = "#1B9E77",
+  "mPSY" = "#66A61E",
+  "TMS"  = "#4D4D4D"
 )
 
+p_ceac <- ggplot(ceac_data, aes(x = x, y = y, color = strategy)) +
+  geom_line(linewidth = 1.0) +
+  geom_vline(
+    xintercept = 50000,
+    linetype = "dashed",
+    color = "grey60",
+    linewidth = 0.7
+  ) +
+  geom_vline(
+    xintercept = 150000,
+    linetype = "dashed",
+    color = "grey60",
+    linewidth = 0.7
+  ) +
+  scale_color_manual(values = cols) +
+  scale_x_continuous(
+    breaks = c(0, 100000, 200000, 300000, 400000, 500000),
+    labels = comma,
+    expand = expansion(mult = c(0.01, 0.03))
+  ) +
+  scale_y_continuous(
+    limits = c(0, 1),
+    breaks = c(0, 0.25, 0.50, 0.75, 1.00),
+    labels = label_number(accuracy = 0.01),
+    expand = expansion(mult = c(0, 0.01))
+  ) +
+  coord_cartesian(xlim = c(0, 500000), ylim = c(0, 1)) +
+  labs(
+    x = "Willingness-to-Pay Threshold (US$)",
+    y = "Probability of Cost-Effectiveness",
+    color = "Treatment"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    axis.title = element_text(size = 14, color = "black"),
+    axis.text = element_text(size = 12, color = "black"),
+    legend.title = element_text(size = 12, face = "bold"),
+    legend.text = element_text(size = 10),
+    legend.position = c(0.8, 0.6),
+    legend.justification = c(0, 1),
+    legend.background = element_rect(fill = "white", color = "grey50", linewidth = 0.4),
+    legend.key = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_line(color = "grey85", linewidth = 0.5),
+    axis.line = element_line(color = "black"),
+    plot.margin = margin(10, 25, 10, 10)
+  )
+
+print(p_ceac)
+
+ggsave(
+  filename = "psa_ac.tif",
+  plot = p_ceac,
+  width = 12,
+  height = 7.5,
+  dpi = 300,
+  compression = "lzw",
+  bg = "white"
+)
 
 library(dplyr)
-
 
 ceac_50k <- ceac_data %>%
   group_by(strategy) %>%
