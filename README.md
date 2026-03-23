@@ -2,7 +2,8 @@
 
 This repository contains the analytical code used for the cost-effectiveness analysis presented in the manuscript:
 
-"Cost-effectiveness of Esketamine versus Alternative Treatment Strategies for Treatment-resistant Depression in Hong Kong: A Multi-armed Modelling Study"
+"Cost-effectiveness of Esketamine versus Alternative Treatment Strategies for Treatment-resistant Depression in Hong Kong: A Multi-armed Modelling Study" by Yifan Li et al.
+
 
 ---
 
